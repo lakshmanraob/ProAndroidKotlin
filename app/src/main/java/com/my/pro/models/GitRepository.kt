@@ -1,6 +1,7 @@
 package com.my.pro.models
 
 import com.my.pro.util.NetworkManager
+import io.reactivex.Observable
 
 
 class GitRepository(private val networkManager: NetworkManager) {
@@ -8,27 +9,13 @@ class GitRepository(private val networkManager: NetworkManager) {
     val gitRepoLocalDataSource = GitRepoLocalDataSource()
     val gitRepoRemoteDataSource = GitRepoRemoteDataSource()
 
-    fun getGitRepositories(onRepositoryReadyCallback: OnRepositoryReadyCallback) {
-
+    fun getGitRepositories(): Observable<ArrayList<GitRepo>> {
         networkManager.isConnectedToInternet?.let {
             if (it) {
-                gitRepoRemoteDataSource.getRepositories(object : OnRepoRemoteReadyCallback {
-                    override fun onLocalDataReady(data: ArrayList<GitRepo>) {
-                        gitRepoLocalDataSource.saveRepositories(data)
-                        onRepositoryReadyCallback.onDataReady(data)
-                    }
-
-                })
-            } else {
-                gitRepoLocalDataSource.getRepositories(object : OnRepoLocalReadyCallback {
-                    override fun onLocalDataReady(data: ArrayList<GitRepo>) {
-                        onRepositoryReadyCallback.onDataReady(data)
-                    }
-
-                })
+                return gitRepoRemoteDataSource.getRepositories()
             }
         }
-
+        return gitRepoLocalDataSource.getRepositories()
     }
 
 }
